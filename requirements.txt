@@ -1,6 +1,10 @@
 flask==3.0.2
-python-dotenv==1.0.1
-requests==2.31.0
+flask-login==0.6.3
+flask-caching==2.1.0
+flask-limiter==3.5.0
 google-generativeai>=0.3.2
-gunicorn==21.2.0
-pdfkit==1.0.0 
+python-dotenv==1.0.1
+pdfkit==1.0.0
+pytz==2024.1
+werkzeug==3.0.1
+limits==3.7.0 

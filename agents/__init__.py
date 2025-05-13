@@ -1,3 +1,3 @@
-from .crew import LegalCrew
+from .gemini_agent import GeminiAgent
 
-__all__ = ['LegalCrew'] 
+__all__ = ['GeminiAgent'] 

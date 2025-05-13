@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, send_file, flash, redirect, url_for, session, jsonify
+from flask import Flask, request, render_template, send_file, flash, redirect, url_for, session, jsonify, make_response
 from dotenv import load_dotenv
 import os
 import google.generativeai as genai
@@ -11,13 +11,18 @@ import secrets
 from pytz import timezone
 import re
 import json
+from config import Config
+from agents.gemini_agent import GeminiAgent
+from utils.cache_manager import init_cache, cache_document, get_cached_document, clear_document_cache, limiter, CacheManager
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Configuração de logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, Config.LOG_LEVEL),
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('app.log'),
+        logging.FileHandler(Config.LOG_FILE),
         logging.StreamHandler()
     ]
 )
@@ -25,6 +30,7 @@ logging.basicConfig(
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', secrets.token_hex(32))  # Usa SECRET_KEY do .env ou gera uma nova
 load_dotenv()
+app.config.from_object(Config)
 
 # Configurações de segurança
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)  # Sessão expira em 1 hora
@@ -56,7 +62,42 @@ genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-2.0-flash')
 
 # Configuração do pdfkit
-pdfkit_config = pdfkit.configuration(wkhtmltopdf='C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe')
+pdfkit_config = pdfkit.configuration(wkhtmltopdf=Config.PDFKIT_PATH)
+
+# Inicializa o cache e rate limiter
+init_cache(app)
+
+# Inicializa o agente Gemini
+gemini_agent = GeminiAgent()
+
+# Configuração do Login Manager
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+# Classe de usuário para o Flask-Login
+class User(UserMixin):
+    def __init__(self, id, username, password_hash):
+        self.id = id
+        self.username = username
+        self.password_hash = password_hash
+
+# Simulação de banco de dados de usuários (em produção, use um banco de dados real)
+users = {
+    'admin': User('1', 'admin', generate_password_hash('admin123'))
+}
+
+@login_manager.user_loader
+def load_user(user_id):
+    for user in users.values():
+        if user.id == user_id:
+            return user
+    return None
+
+# Context processor para disponibilizar Config em todos os templates
+@app.context_processor
+def inject_config():
+    return dict(Config=Config)
 
 # Função para obter data/hora atual com timezone
 def get_current_time():
@@ -66,8 +107,8 @@ def get_current_time():
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'logged_in' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'error')
+        if not current_user.is_authenticated:
+            flash('Por favor, faça login para acessar esta página.', 'danger')
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
@@ -104,8 +145,9 @@ def login():
         session['last_attempt'] = get_current_time().isoformat()
         session['login_attempts'] = session.get('login_attempts', 0) + 1
         
-        if username == DEFAULT_USERNAME and password == DEFAULT_PASSWORD:
-            session['logged_in'] = True
+        user = users.get(username)
+        if user and check_password_hash(user.password_hash, password):
+            login_user(user)
             session['login_attempts'] = 0  # Reset tentativas após login bem-sucedido
             session.permanent = True  # Mantém a sessão por 1 hora
             flash('Login realizado com sucesso!', 'success')
@@ -117,8 +159,9 @@ def login():
     return render_template('login.html')
 
 @app.route('/logout')
+@login_required
 def logout():
-    session.clear()  # Limpa todos os dados da sessão
+    logout_user()
     flash('Você foi desconectado.', 'success')
     return redirect(url_for('login'))
 
@@ -133,10 +176,17 @@ def validate_text(text, field_name):
         return False, f"O campo {field_name} não pode estar vazio"
     
     text = text.strip()
-    if len(text) < MIN_TEXT_LENGTH:
-        return False, f"O campo {field_name} deve ter pelo menos {MIN_TEXT_LENGTH} caracteres"
-    if len(text) > MAX_TEXT_LENGTH:
-        return False, f"O campo {field_name} não pode ter mais que {MAX_TEXT_LENGTH} caracteres"
+    
+    # Validação específica para o campo parties
+    if field_name == 'parties':
+        if len(text) < 50:
+            return False, "O campo Partes Envolvidas deve ter pelo menos 50 caracteres. Descreva detalhadamente as partes envolvidas no processo."
+    
+    # Validação geral para outros campos
+    if len(text) < Config.MIN_TEXT_LENGTH:
+        return False, f"O campo {field_name} deve ter pelo menos {Config.MIN_TEXT_LENGTH} caracteres"
+    if len(text) > Config.MAX_TEXT_LENGTH:
+        return False, f"O campo {field_name} não pode ter mais que {Config.MAX_TEXT_LENGTH} caracteres"
     
     # Verifica caracteres especiais ou scripts maliciosos
     if re.search(r'<script|javascript:|on\w+\s*=', text, re.IGNORECASE):
@@ -146,7 +196,7 @@ def validate_text(text, field_name):
 
 def validate_case_type(case_type):
     """Valida o tipo de peça"""
-    if case_type not in ALLOWED_CASE_TYPES:
+    if case_type not in Config.ALLOWED_CASE_TYPES:
         return False, "Tipo de peça inválido"
     return True, case_type
 
@@ -165,6 +215,7 @@ def sanitize_html(html_content):
 
 @app.route('/validate', methods=['POST'])
 @login_required
+@limiter.limit("30 per minute")
 def validate_form():
     """Endpoint para validação do formulário via AJAX"""
     try:
@@ -191,6 +242,7 @@ def validate_form():
 
 @app.route('/generate', methods=['POST'])
 @login_required
+@limiter.limit("10 per minute")
 def generate_document():
     try:
         # Logging detalhado do request
@@ -202,236 +254,107 @@ def generate_document():
         if request.method != 'POST':
             raise ValueError("Método não permitido")
 
-        # Verifica se o Content-Type está correto
-        content_type = request.headers.get('Content-Type', '')
-        if not content_type or 'multipart/form-data' not in content_type and 'application/x-www-form-urlencoded' not in content_type:
-            raise ValueError(f"Content-Type inválido: {content_type}")
-
-        # Validação dos campos obrigatórios
-        required_fields = ['case_type', 'parties', 'facts', 'legal_grounds', 'requests']
-        missing_fields = [field for field in required_fields if field not in request.form]
-        
-        if missing_fields:
-            error_msg = f"Campos obrigatórios ausentes: {', '.join(missing_fields)}"
-            logging.error(error_msg)
-            flash(error_msg, 'error')
-            return redirect(url_for('index'))
-
-        # Validação do tipo de peça
+        # Obtém e valida os dados do formulário
         case_type = request.form.get('case_type', '').strip()
-        if not case_type:
-            flash('O tipo de peça é obrigatório', 'error')
-            return redirect(url_for('index'))
+        parties = request.form.get('parties', '').strip()
+        facts = request.form.get('facts', '').strip()
+        legal_grounds = request.form.get('legal_grounds', '').strip()
+        requests = request.form.get('requests', '').strip()
 
+        # Valida o tipo de peça
         is_valid, message = validate_case_type(case_type)
         if not is_valid:
             flash(message, 'error')
             return redirect(url_for('index'))
 
-        # Validação e sanitização dos campos de texto
-        fields_to_validate = {
-            'parties': 'Partes Envolvidas',
-            'facts': 'Fatos',
-            'legal_grounds': 'Fundamentação Jurídica',
-            'requests': 'Pedidos'
+        # Valida os outros campos
+        fields = {
+            'parties': parties,
+            'facts': facts,
+            'legal_grounds': legal_grounds,
+            'requests': requests
         }
 
-        validated_data = {}
-        for field, display_name in fields_to_validate.items():
-            value = request.form.get(field, '').strip()
-            if not value:
-                flash(f'O campo {display_name} é obrigatório', 'error')
-                return redirect(url_for('index'))
-
-            is_valid, result = validate_text(value, display_name)
+        for field_name, field_value in fields.items():
+            is_valid, message = validate_text(field_value, field_name)
             if not is_valid:
-                flash(result, 'error')
+                flash(message, 'error')
                 return redirect(url_for('index'))
-            validated_data[field] = result
 
-        validated_data['case_type'] = case_type
-
-        logging.info(f"Iniciando geração de documento do tipo: {case_type}")
-        logging.info(f"Dados validados: {validated_data}")
-
-        # Define prompt for Gemini API
-        prompt = f"""
-        Crie uma peça jurídica em português (tipo: {validated_data['case_type']}) com base nas seguintes informações.
-        Formate o documento seguindo a estrutura abaixo, usando as tags HTML apropriadas.
-        Mantenha a formatação consistente e profissional:
-
-        <div class="header">
-            <h1>{validated_data['case_type']}</h1>
-        </div>
-
-        <h2>I - DAS PARTES</h2>
-        <p>{validated_data['parties']}</p>
-
-        <h2>II - DOS FATOS</h2>
-        <p>{validated_data['facts']}</p>
-
-        <h2>III - DA FUNDAMENTAÇÃO JURÍDICA</h2>
-        <p>{validated_data['legal_grounds']}</p>
-
-        <h2>IV - DOS PEDIDOS</h2>
-        <p>{validated_data['requests']}</p>
-
-        <div class="signature">
-            <div class="signature-line"></div>
-            <p>Advogado(a)</p>
-            <p>OAB/XX XXX.XXX</p>
-        </div>
-
-        <div class="footer">
-            Documento gerado em {get_current_time().strftime('%d/%m/%Y %H:%M:%S')}
-        </div>
-
-        A peça deve seguir o formato formal de documentos jurídicos brasileiros, com linguagem técnica e formal.
-        Mantenha a formatação consistente, com parágrafos bem estruturados e espaçamento adequado.
-        Não inclua nenhum CSS ou estilo inline no documento.
-        """
-
+        # Gera o documento usando o agente Gemini
         try:
-            # Generate document
-            response = model.generate_content(prompt)
-            if not response or not response.text:
-                raise ValueError("Resposta vazia da API Gemini")
-            
-            result = response.text
-            logging.info("Documento gerado com sucesso pela API Gemini")
-
+            document = gemini_agent.generate_document(
+                case_type=case_type,
+                parties=parties,
+                facts=facts,
+                legal_grounds=legal_grounds,
+                requests=requests
+            )
         except Exception as e:
-            logging.error(f"Erro na geração do documento pela API Gemini: {str(e)}")
-            flash('Erro ao gerar documento: falha na comunicação com a API', 'error')
+            logging.error(f"Erro na geração do documento: {str(e)}")
+            flash("Erro ao gerar o documento. Por favor, tente novamente.", 'error')
             return redirect(url_for('index'))
 
-        # Sanitiza o HTML gerado
-        result = sanitize_html(result)
-        logging.info("HTML sanitizado com sucesso")
+        # Sanitiza o HTML do documento
+        document = sanitize_html(document)
 
-        # Convert to PDF
+        # Gera o PDF
         try:
-        html = f"""
-            <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap');
-                    
-                    body {{
-                        font-family: 'Playfair Display', serif;
-                        line-height: 2;
-                        text-align: justify;
-                        margin: 40px;
-                        color: #2C3E50;
-                    }}
-                    
-                    h1 {{
-                        font-size: 2rem;
-                        text-align: center;
-                        margin-bottom: 2rem;
-                        font-weight: 700;
-                        text-transform: uppercase;
-                        letter-spacing: 1px;
-                        color: #2C3E50;
-                    }}
-                    
-                    h2 {{
-                        font-size: 1.4rem;
-                        margin-top: 2.5rem;
-                        margin-bottom: 1.5rem;
-                        font-weight: 700;
-                        color: #34495E;
-                        border-bottom: 2px solid #3498DB;
-                        padding-bottom: 0.5rem;
-                    }}
-                    
-                    p {{
-                        margin-bottom: 1.5rem;
-                        text-indent: 2rem;
-                    }}
-                    
-                    .header {{
-                        text-align: center;
-                        margin-bottom: 3rem;
-                        padding-bottom: 2rem;
-                        border-bottom: 2px solid #3498DB;
-                    }}
-                    
-                    .footer {{
-                        text-align: center;
-                        margin-top: 4rem;
-                        padding-top: 2rem;
-                        border-top: 1px solid #E2E8F0;
-                        font-size: 0.9rem;
-                        color: #34495E;
-                    }}
-                    
-                    .signature {{
-                        margin-top: 4rem;
-                        text-align: center;
-                    }}
-                    
-                    .signature-line {{
-                        width: 300px;
-                        margin: 0 auto;
-                        border-top: 2px solid #2C3E50;
-                        margin-bottom: 0.5rem;
-                    }}
-            </style>
-        </head>
-        <body>
-                {result}
-        </body>
-        </html>
-        """
-        
-        # Create temporary PDF file
-        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
-                pdfkit.from_string(html, tmp.name, configuration=pdfkit_config)
-            pdf_path = tmp.name
-
-            logging.info(f"PDF gerado com sucesso: {pdf_path}")
-            flash('Documento gerado com sucesso!', 'success')
-            
-            # Armazena o caminho do PDF na sessão
-            session['pdf_path'] = pdf_path
-            
-            return render_template('index.html', document=result, pdf_path=pdf_path)
-
+            with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as temp_pdf:
+                pdfkit.from_string(document, temp_pdf.name, configuration=pdfkit_config)
+                pdf_path = os.path.basename(temp_pdf.name)
         except Exception as e:
-            logging.error(f"Erro ao gerar PDF: {str(e)}")
-            flash('Erro ao gerar PDF do documento', 'error')
-            return redirect(url_for('index'))
+            logging.error(f"Erro na geração do PDF: {str(e)}")
+            pdf_path = None
+
+        # Renderiza o template de preview
+        return render_template('preview.html', document=document, pdf_path=pdf_path)
 
     except Exception as e:
-        logging.error(f"Erro ao gerar documento: {str(e)} | request.form: {request.form}")
-        flash(f'Erro ao gerar documento: {str(e)}', 'error')
+        logging.error(f"Erro na geração do documento: {str(e)}")
+        flash("Ocorreu um erro ao processar sua solicitação.", 'error')
         return redirect(url_for('index'))
 
 @app.route('/download/<path:filename>')
 @login_required
 def download_file(filename):
+    """Download do arquivo PDF gerado."""
     try:
-        # Verifica se o arquivo existe e está dentro do diretório temporário
-        if not os.path.exists(filename) or not filename.startswith(tempfile.gettempdir()):
-            logging.error(f"Arquivo não encontrado ou acesso negado: {filename}")
-            flash('Arquivo não encontrado ou acesso negado', 'error')
-            return redirect(url_for('index'))
-            
-        # Obtém o nome do arquivo para download
-        download_name = f"documento_juridico_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        # Configurações do PDF
+        options = {
+            'page-size': 'A4',
+            'margin-top': '2.5cm',
+            'margin-right': '2.5cm',
+            'margin-bottom': '2.5cm',
+            'margin-left': '2.5cm',
+            'encoding': 'UTF-8',
+            'no-outline': None,
+            'quiet': '',
+            'print-media-type': '',
+            'enable-local-file-access': '',
+            'dpi': 300,
+            'image-quality': 100,
+            'enable-smart-shrinking': '',
+            'zoom': 1.0
+        }
         
-        return send_file(
-            filename,
-            as_attachment=True,
-            download_name=download_name,
-            mimetype='application/pdf'
+        # Gera o PDF com as configurações
+        pdf = pdfkit.from_file(
+            os.path.join(app.config['UPLOAD_FOLDER'], filename),
+            False,
+            options=options
         )
+        
+        # Configura o response para download
+        response = make_response(pdf)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename={filename}'
+        
+        return response
+        
     except Exception as e:
-        logging.error(f"Erro ao baixar arquivo: {str(e)}")
-        flash('Erro ao baixar arquivo', 'error')
+        logging.error(f"Erro ao gerar PDF: {str(e)}")
+        flash('Erro ao gerar o PDF. Por favor, tente novamente.', 'danger')
         return redirect(url_for('index'))
 
 if __name__ == '__main__':

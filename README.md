@@ -1,50 +1,33 @@
-# 🚀 LexGenius
+# LexGenius - Gerador de Peças Jurídicas
 
-<div align="center">
-  <img src="static/logo.png" alt="LexGenius Logo" width="200"/>
-  <h3>Gerador Inteligente de Documentos Jurídicos</h3>
-</div>
+LexGenius é uma aplicação web que utiliza inteligência artificial para gerar peças jurídicas de forma rápida e eficiente.
 
-## 📋 Sobre o Projeto
+## Funcionalidades
 
-LexGenius é uma aplicação web moderna que utiliza inteligência artificial para gerar documentos jurídicos profissionais de forma rápida e eficiente. Desenvolvido com Python e Flask, o sistema oferece uma interface intuitiva e recursos avançados para advogados e profissionais do direito.
+- Geração de diferentes tipos de peças jurídicas
+- Interface intuitiva e responsiva
+- Preview do documento antes do download
+- Exportação para PDF
+- Sistema de cache para melhor performance
+- Rate limiting para proteção da API
+- Validação de dados em tempo real
+- Sistema de autenticação seguro
 
-## ✨ Funcionalidades
-
-- 🤖 Geração de documentos jurídicos usando IA (Gemini API)
-- 📝 Suporte a múltiplos tipos de peças jurídicas:
-  - Petição Inicial
-  - Contestação
-  - Recurso
-  - Agravo
-  - Embargos
-- 🔒 Sistema de autenticação seguro
-- 📊 Interface moderna e responsiva
-- 📄 Exportação em PDF
-- 📋 Copiar documento para área de transferência
-- ⚡ Validação em tempo real
-- 📱 Design responsivo
-
-## 🛠️ Tecnologias Utilizadas
+## Requisitos
 
 - Python 3.8+
-- Flask
-- Google Gemini AI
-- Bootstrap 5
-- TailwindCSS
-- PDFKit
-- HTML5/CSS3
-- JavaScript
+- wkhtmltopdf
+- Conta no Google Cloud com acesso à API Gemini
 
-## 🚀 Instalação
+## Instalação
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/seu-usuario/lexgenius.git
-cd lexgenius
+git clone https://github.com/dheiver2/LexGenius.git
+cd LexGenius
 ```
 
-2. Crie um ambiente virtual:
+2. Crie e ative um ambiente virtual:
 ```bash
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
@@ -56,60 +39,72 @@ venv\Scripts\activate     # Windows
 pip install -r requirements.txt
 ```
 
-4. Configure as variáveis de ambiente:
-```bash
-cp .env.example .env
-```
-Edite o arquivo `.env` com suas configurações:
-```
-GEMINI_API_KEY=sua_chave_api
-SECRET_KEY=sua_chave_secreta
-```
-
-5. Instale o wkhtmltopdf:
+4. Instale o wkhtmltopdf:
 - Windows: Baixe e instale de https://wkhtmltopdf.org/downloads.html
 - Linux: `sudo apt-get install wkhtmltopdf`
 - Mac: `brew install wkhtmltopdf`
 
-6. Execute a aplicação:
+5. Configure as variáveis de ambiente:
+```bash
+cp .env.example .env
+```
+Edite o arquivo .env com suas configurações.
+
+## Uso
+
+1. Inicie o servidor:
 ```bash
 python app.py
 ```
 
-## 🔧 Configuração
+2. Acesse http://localhost:5000 no navegador
 
-### Credenciais Padrão
-- Usuário: admin
-- Senha: admin123
+3. Faça login com as credenciais configuradas
 
-### Tipos de Documentos Suportados
-- Petição Inicial
-- Contestação
-- Recurso
-- Agravo
-- Embargos
+4. Preencha o formulário com os dados da peça jurídica
 
-## 📝 Uso
+5. Visualize o preview e baixe o PDF
 
-1. Acesse a aplicação em `http://localhost:5000`
-2. Faça login com as credenciais
-3. Selecione o tipo de documento
-4. Preencha os campos necessários:
-   - Partes Envolvidas
-   - Fatos
-   - Fundamentação Jurídica
-   - Pedidos
-5. Clique em "Gerar Peça"
-6. Visualize, copie ou baixe o documento em PDF
+## Estrutura do Projeto
 
-## 🔒 Segurança
+```
+LexGenius/
+├── agents/
+│   └── gemini_agent.py
+├── utils/
+│   └── cache_manager.py
+├── templates/
+│   ├── index.html
+│   ├── login.html
+│   └── preview.html
+├── static/
+│   └── css/
+├── app.py
+├── config.py
+├── requirements.txt
+└── README.md
+```
 
-- Autenticação de usuário
-- Proteção contra CSRF
+## Segurança
+
+- Autenticação com limite de tentativas
+- Rate limiting para proteção contra abusos
 - Sanitização de inputs
 - Validação de dados
 - Sessões seguras
-- Limite de tentativas de login
+- Cache para otimização
+
+## Contribuição
+
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
+3. Commit suas mudanças (`git commit -am 'Adiciona nova feature'`)
+4. Push para a branch (`git push origin feature/nova-feature`)
+5. Crie um Pull Request
+
+## Licença
+
+Este projeto está licenciado sob a MIT License - veja o arquivo LICENSE para detalhes.
 
 ## 🤝 Contribuindo
 
@@ -118,10 +113,6 @@ python app.py
 3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
 4. Push para a Branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
-
-## �� Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
 ## 📞 Suporte
 
