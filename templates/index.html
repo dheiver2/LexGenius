@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Peças Jurídicas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary-color: #2C3E50;
+            --secondary-color: #34495E;
+            --accent-color: #3498DB;
+            --success-color: #27AE60;
+            --warning-color: #F1C40F;
+            --danger-color: #E74C3C;
+            --light-bg: #ECF0F1;
+            --dark-text: #2C3E50;
+            --light-text: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+        }
+
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--primary-color);
+            border: none;
+            padding: 1rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--accent-color);
+            border-bottom: 3px solid var(--accent-color);
+            background: none;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--accent-color);
+            border-bottom: 3px solid var(--accent-color);
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .form-container:hover {
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-label {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #E2E8F0;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: #2c3e50;
+            transform: translateY(-1px);
+        }
+
+        .legal-document {
+            font-family: 'Playfair Display', serif;
+            line-height: 1.8;
+            text-align: justify;
+            color: var(--dark-text);
+            padding: 2rem;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+        }
+
+        .legal-document h1 {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .legal-document h2 {
+            font-size: 1.4rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .legal-document p {
+            margin-bottom: 1.5rem;
+            text-indent: 2rem;
+            line-height: 2;
+        }
+
+        .legal-document .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .legal-document .footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid #E2E8F0;
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+        }
+
+        .legal-document .signature {
+            margin-top: 4rem;
+            text-align: center;
+        }
+
+        .legal-document .signature-line {
+            width: 300px;
+            margin: 0 auto;
+            border-top: 2px solid var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .alert {
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: none;
+        }
+
+        .alert-success {
+            background-color: #D4EDDA;
+            color: #155724;
+        }
+
+        .alert-danger {
+            background-color: #F8D7DA;
+            color: #721C24;
+        }
+
+        .document-container {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-top: 1rem;
+        }
+
+        .btn-download {
+            background-color: var(--success-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-download:hover {
+            background-color: #219a52;
+            transform: translateY(-1px);
+        }
+
+        .btn-copy {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-copy:hover {
+            background-color: #2c3e50;
+            transform: translateY(-1px);
+        }
+
+        .btn-copy.copied {
+            background-color: var(--success-color);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--success-color);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            display: block;
+            animation: fadeInOut 2.5s ease-in-out;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(20px); }
+            10% { opacity: 1; transform: translateY(0); }
+            90% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .btn-logout {
+            background-color: var(--danger-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-logout:hover {
+            background-color: #c0392b;
+            transform: translateY(-1px);
+            color: white;
+        }
+
+        .progress-container {
+            display: none;
+            margin: 2rem 0;
+            padding: 1rem;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-container.show {
+            display: block;
+        }
+
+        .progress {
+            height: 1.5rem;
+            background-color: #E2E8F0;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            background-color: var(--accent-color);
+            height: 100%;
+            border-radius: 0.75rem;
+            transition: width 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0.2) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255, 255, 255, 0.2) 50%,
+                rgba(255, 255, 255, 0.2) 75%,
+                transparent 75%,
+                transparent
+            );
+            background-size: 30px 30px;
+            animation: progress-animation 1s linear infinite;
+        }
+
+        @keyframes progress-animation {
+            0% {
+                background-position: 0 0;
+            }
+            100% {
+                background-position: 30px 0;
+            }
+        }
+
+        .progress-status {
+            text-align: center;
+            color: var(--secondary-color);
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .btn-generate:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .toast-error {
+            background-color: var(--danger-color) !important;
+        }
+        .toast-success {
+            background-color: var(--success-color) !important;
+        }
+        .form-control.is-invalid {
+            border-color: var(--danger-color);
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right calc(.375em + .1875rem) center;
+            background-size: calc(.75em + .375rem) calc(.75em + .375rem);
+        }
+        .form-control.is-valid {
+            border-color: var(--success-color);
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right calc(.375em + .1875rem) center;
+            background-size: calc(.75em + .375rem) calc(.75em + .375rem);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-6">
+        <div class="header-container">
+            <div class="flex items-center space-x-4">
+                <img src="{{ url_for('static', filename='logo.svg') }}" alt="LexGenius Logo" class="w-16 h-16">
+            <div>
+                    <h1 class="text-4xl font-bold text-primary">LexGenius</h1>
+                    <p class="text-gray-600">Gerador Inteligente de Documentos Jurídicos</p>
+                </div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="btn-logout">
+                <i class="bi bi-box-arrow-right"></i>
+                Sair
+            </a>
+        </div>
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-6" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="form-tab" data-bs-toggle="tab" data-bs-target="#form" type="button" role="tab">
+                    <i class="bi bi-pencil-square me-2"></i>Formulário
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="document-tab" data-bs-toggle="tab" data-bs-target="#document" type="button" role="tab">
+                    <i class="bi bi-file-text me-2"></i>Documento Gerado
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="myTabContent">
+            <!-- Form Tab -->
+            <div class="tab-pane fade show active" id="form" role="tabpanel">
+                <form action="/generate" method="POST" class="form-container p-8" id="documentForm">
+                    <div class="mb-6">
+                        <label class="form-label">Tipo de Peça</label>
+                        <select name="case_type" class="form-select">
+                    <option value="Petição Inicial">Petição Inicial</option>
+                    <option value="Contestação">Contestação</option>
+                    <option value="Recurso">Recurso</option>
+                    <option value="Agravo">Agravo</option>
+                    <option value="Embargos">Embargos</option>
+                </select>
+            </div>
+                    <div class="mb-6">
+                        <label class="form-label">Partes Envolvidas</label>
+                        <textarea name="parties" class="form-control" rows="4" placeholder="Ex: Autor: João Silva, CPF: 123.456.789-00&#10;Réu: Maria Santos, CPF: 987.654.321-00"></textarea>
+                    </div>
+                    <div class="mb-6">
+                        <label class="form-label">Fatos</label>
+                        <textarea name="facts" class="form-control" rows="6" placeholder="Descreva os fatos relevantes do caso..."></textarea>
+                    </div>
+                    <div class="mb-6">
+                        <label class="form-label">Fundamentação Jurídica</label>
+                        <textarea name="legal_grounds" class="form-control" rows="6" placeholder="Cite as leis, jurisprudência e doutrina relevantes..."></textarea>
+            </div>
+                    <div class="mb-6">
+                        <label class="form-label">Pedidos</label>
+                        <textarea name="requests" class="form-control" rows="4" placeholder="Liste os pedidos específicos..."></textarea>
+            </div>
+
+                    <div class="progress-container" id="progressContainer">
+                        <div class="progress">
+                            <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%"></div>
+            </div>
+                        <div class="progress-status" id="progressStatus">Iniciando geração do documento...</div>
+            </div>
+
+                    <div class="flex justify-between">
+                        <button type="button" onclick="fillExample()" class="btn-secondary">
+                            <i class="bi bi-lightning me-2"></i>Preencher Exemplo
+                        </button>
+                        <button type="submit" class="btn-primary" id="generateButton">
+                            <i class="bi bi-file-earmark-text me-2"></i>Gerar Peça
+                </button>
+            </div>
+        </form>
+            </div>
+
+            <!-- Document Tab -->
+            <div class="tab-pane fade" id="document" role="tabpanel">
+                <div class="document-container">
+                    {% if document %}
+                        <div class="legal-document" id="documentContent">
+                            {{ document | safe }}
+                        </div>
+                        <div class="mt-6 flex justify-center space-x-4">
+                            <button onclick="copyDocument()" class="btn-copy">
+                                <i class="bi bi-clipboard me-2"></i>Copiar Documento
+                            </button>
+                            {% if pdf_path %}
+                                <a href="{{ url_for('download_file', filename=pdf_path) }}" class="btn-download" target="_blank">
+                                    <i class="bi bi-download me-2"></i>Baixar PDF
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-gray-500 py-8">
+                            <i class="bi bi-file-text text-4xl mb-4"></i>
+                            <p>Nenhum documento gerado ainda.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Função para validar o formulário em tempo real
+        function validateForm() {
+            const formData = new FormData(document.getElementById('documentForm'));
+            const data = {};
+            formData.forEach((value, key) => data[key] = value);
+
+            // Validação básica no frontend
+            if (!data.case_type) {
+                showToast('Selecione o tipo de peça', 'error');
+                return false;
+            }
+
+            if (!data.parties || data.parties.length < 50) {
+                showToast('O campo Partes Envolvidas deve ter pelo menos 50 caracteres', 'error');
+                return false;
+            }
+
+            if (!data.facts || data.facts.length < 50) {
+                showToast('O campo Fatos deve ter pelo menos 50 caracteres', 'error');
+                return false;
+            }
+
+            if (!data.legal_grounds || data.legal_grounds.length < 50) {
+                showToast('O campo Fundamentação Jurídica deve ter pelo menos 50 caracteres', 'error');
+                return false;
+            }
+
+            if (!data.requests || data.requests.length < 50) {
+                showToast('O campo Pedidos deve ter pelo menos 50 caracteres', 'error');
+                return false;
+            }
+
+            return true;
+        }
+
+        // Função para mostrar toast de mensagem
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type === 'error' ? 'toast-error' : 'toast-success'} show`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Adiciona validação em tempo real para todos os campos
+        document.querySelectorAll('select, textarea').forEach(element => {
+            element.addEventListener('input', validateForm);
+        });
+
+        // Atualiza o evento de submit do formulário
+        document.getElementById('documentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                return;
+            }
+
+            const form = this;
+            const generateButton = document.getElementById('generateButton');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressStatus = document.getElementById('progressStatus');
+            
+            // Desabilita o botão e mostra a barra de progresso
+            generateButton.disabled = true;
+            generateButton.innerHTML = '<span class="loading-spinner"></span>Gerando...';
+            progressContainer.classList.add('show');
+            
+            // Simula o progresso
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 5;
+                if (progress <= 90) {
+                    progressBar.style.width = progress + '%';
+                    if (progress < 30) {
+                        progressStatus.textContent = 'Analisando informações...';
+                    } else if (progress < 60) {
+                        progressStatus.textContent = 'Gerando documento...';
+                    } else {
+                        progressStatus.textContent = 'Finalizando...';
+                    }
+                }
+            }, 500);
+
+            // Envia o formulário
+            const formData = new FormData(form);
+            
+            // Garante que todos os campos necessários estão presentes
+            const requiredFields = ['case_type', 'parties', 'facts', 'legal_grounds', 'requests'];
+            for (const field of requiredFields) {
+                if (!formData.get(field)) {
+                    clearInterval(interval);
+                    showToast(`O campo ${field} é obrigatório`, 'error');
+                    generateButton.disabled = false;
+                    generateButton.innerHTML = '<i class="bi bi-file-earmark-text me-2"></i>Gerar Peça';
+                    return;
+                }
+            }
+
+            // Envia o formulário usando fetch
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Erro na resposta do servidor: ${response.status} ${response.statusText}`);
+                }
+                return response.text();
+            })
+            .then(html => {
+                clearInterval(interval);
+                progressBar.style.width = '100%';
+                progressStatus.textContent = 'Documento gerado com sucesso!';
+                
+                // Atualiza a página com o resultado
+                document.open();
+                document.write(html);
+                document.close();
+            })
+            .catch(error => {
+                clearInterval(interval);
+                progressBar.style.width = '100%';
+                progressBar.style.backgroundColor = 'var(--danger-color)';
+                progressStatus.textContent = 'Erro ao gerar documento. Tente novamente.';
+                generateButton.disabled = false;
+                generateButton.innerHTML = '<i class="bi bi-file-earmark-text me-2"></i>Gerar Peça';
+                showToast('Erro ao gerar documento: ' + error.message, 'error');
+                console.error('Erro:', error);
+            });
+        });
+
+        // Função para preencher exemplo
+        function fillExample() {
+            document.querySelector('select[name="case_type"]').value = 'Petição Inicial';
+            document.querySelector('textarea[name="parties"]').value = 'Autor: João Silva, CPF: 123.456.789-00\nRéu: Maria Santos, CPF: 987.654.321-00';
+            document.querySelector('textarea[name="facts"]').value = 'Em 15 de março de 2024, o Autor adquiriu um smartphone no valor de R$ 2.500,00 da empresa Ré. O aparelho apresentou defeitos de fabricação após 30 dias de uso, impossibilitando seu funcionamento adequado. O Autor tentou contato com a empresa Ré para solução do problema, mas não obteve resposta satisfatória.';
+            document.querySelector('textarea[name="legal_grounds"]').value = 'Art. 6º do CDC - Direitos básicos do consumidor\nArt. 18 do CDC - Responsabilidade pelo fato do produto\nJurisprudência do STJ sobre garantia legal\nDoutrina sobre responsabilidade civil do fornecedor';
+            document.querySelector('textarea[name="requests"]').value = '1. Recebimento da presente petição inicial\n2. Citação do réu\n3. Substituição do produto por outro da mesma espécie, em perfeitas condições de uso\n4. Danos morais no valor de R$ 5.000,00';
+            
+            // Valida o formulário após preencher
+            validateForm();
+        }
+
+        // Ativar a aba do documento quando houver um documento gerado
+        {% if document %}
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelector('#document-tab').click();
+            });
+        {% endif %}
+
+        // Função para copiar documento
+        function copyDocument() {
+            const documentContent = document.getElementById('documentContent').innerText;
+            navigator.clipboard.writeText(documentContent).then(() => {
+                const button = document.querySelector('.btn-copy');
+                const originalText = button.innerHTML;
+                
+                button.classList.add('copied');
+                button.innerHTML = '<i class="bi bi-check2 me-2"></i>Copiado!';
+                
+                setTimeout(() => {
+                    button.classList.remove('copied');
+                    button.innerHTML = originalText;
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html> 

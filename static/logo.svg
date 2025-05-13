@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <!-- Fundo do círculo -->
+    <circle cx="100" cy="100" r="90" fill="#2C3E50"/>
+    
+    <!-- Balança da justiça -->
+    <g transform="translate(100, 100)">
+        <!-- Base da balança -->
+        <path d="M-40,40 L40,40 L0,0 Z" fill="#3498DB"/>
+        
+        <!-- Haste vertical -->
+        <rect x="-4" y="-60" width="8" height="60" fill="#3498DB"/>
+        
+        <!-- Braços da balança -->
+        <line x1="-40" y1="-60" x2="40" y2="-60" stroke="#3498DB" stroke-width="4"/>
+        
+        <!-- Pratos da balança -->
+        <circle cx="-30" cy="-40" r="15" fill="#3498DB" opacity="0.8"/>
+        <circle cx="30" cy="-40" r="15" fill="#3498DB" opacity="0.8"/>
+    </g>
+    
+    <!-- Texto "Lex" -->
+    <text x="100" y="160" font-family="'Playfair Display', serif" font-size="24" fill="#FFFFFF" text-anchor="middle" font-weight="bold">Lex</text>
+    
+    <!-- Texto "Genius" -->
+    <text x="100" y="180" font-family="'Source Sans Pro', sans-serif" font-size="16" fill="#3498DB" text-anchor="middle">Genius</text>
+</svg> 
