@@ -283,7 +283,7 @@ def generate_document():
 
         # Gera o documento usando o agente Gemini
         try:
-            document = gemini_agent.generate_document(
+            sections = gemini_agent.generate_document(
                 case_type=case_type,
                 parties=parties,
                 facts=facts,
@@ -295,20 +295,78 @@ def generate_document():
             flash("Erro ao gerar o documento. Por favor, tente novamente.", 'error')
             return redirect(url_for('index'))
 
-        # Sanitiza o HTML do documento
-        document = sanitize_html(document)
+        # Prepara variáveis para o template
+        case_type_title = case_type.upper()
+        court_header = "EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO DA ____ª VARA CÍVEL DA COMARCA DE SÃO PAULO – SP"
+        parties_html = '<p class="document-paragraph">' + sections.get('parties', '').replace('\n', '</p><p class="document-paragraph">') + '</p>' if sections.get('parties') else ''
+        facts_html = '<p class="document-paragraph">' + sections.get('facts', '').replace('\n', '</p><p class="document-paragraph">') + '</p>' if sections.get('facts') else ''
+        legal_grounds_html = '<p class="document-paragraph">' + sections.get('legal_grounds', '').replace('\n', '</p><p class="document-paragraph">') + '</p>' if sections.get('legal_grounds') else ''
+        # Pedidos: cada linha vira <li>
+        requests_html = ''.join(f'<li>{line.strip()}</li>' for line in sections.get('requests', '').split('\n') if line.strip())
+        value_cause = sections.get('value_cause', '')
+        city_date = sections.get('city_date', '')
+        lawyer_name = sections.get('lawyer_name', '')
+        lawyer_oab = sections.get('lawyer_oab', '')
+        generation_date = datetime.now().strftime('%d de %B de %Y')
+
+        # Monta o HTML final para o PDF
+        html_for_pdf = render_template(
+            'preview.html',
+            case_type=case_type_title,
+            court_header=court_header,
+            parties=parties_html,
+            facts=facts_html,
+            legal_grounds=legal_grounds_html,
+            requests=requests_html,
+            value_cause=value_cause,
+            city_date=city_date,
+            lawyer_name=lawyer_name,
+            lawyer_oab=lawyer_oab,
+            generation_date=generation_date,
+            pdf_path=None  # Não mostrar botão de download no PDF
+        )
 
         # Gera o PDF
         try:
+            pdf_options = {
+                'page-size': 'A4',
+                'margin-top': '2.5cm',
+                'margin-right': '2.5cm',
+                'margin-bottom': '2.5cm',
+                'margin-left': '2.5cm',
+                'encoding': 'UTF-8',
+                'no-outline': None,
+                'quiet': '',
+                'print-media-type': '',
+                'enable-local-file-access': '',
+                'dpi': 300,
+                'image-quality': 100,
+                'enable-smart-shrinking': '',
+                'zoom': 1.0
+            }
             with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as temp_pdf:
-                pdfkit.from_string(document, temp_pdf.name, configuration=pdfkit_config)
+                pdfkit.from_string(html_for_pdf, temp_pdf.name, configuration=pdfkit_config, options=pdf_options)
                 pdf_path = os.path.basename(temp_pdf.name)
         except Exception as e:
-            logging.error(f"Erro na geração do PDF: {str(e)}")
+            logging.error(f"Erro na geração do PDF: {str(e)}", exc_info=True)
             pdf_path = None
 
-        # Renderiza o template de preview
-        return render_template('preview.html', document=document, pdf_path=pdf_path)
+        # Renderiza o template de preview com as seções separadas
+        return render_template(
+            'preview.html',
+            case_type=case_type_title,
+            court_header=court_header,
+            parties=parties_html,
+            facts=facts_html,
+            legal_grounds=legal_grounds_html,
+            requests=requests_html,
+            value_cause=value_cause,
+            city_date=city_date,
+            lawyer_name=lawyer_name,
+            lawyer_oab=lawyer_oab,
+            generation_date=generation_date,
+            pdf_path=pdf_path
+        )
 
     except Exception as e:
         logging.error(f"Erro na geração do documento: {str(e)}")
@@ -337,23 +395,20 @@ def download_file(filename):
             'enable-smart-shrinking': '',
             'zoom': 1.0
         }
-        
         # Gera o PDF com as configurações
         pdf = pdfkit.from_file(
             os.path.join(app.config['UPLOAD_FOLDER'], filename),
             False,
-            options=options
+            options=options,
+            configuration=pdfkit_config
         )
-        
         # Configura o response para download
         response = make_response(pdf)
         response.headers['Content-Type'] = 'application/pdf'
         response.headers['Content-Disposition'] = f'attachment; filename={filename}'
-        
         return response
-        
     except Exception as e:
-        logging.error(f"Erro ao gerar PDF: {str(e)}")
+        logging.error(f"Erro ao gerar PDF: {str(e)}", exc_info=True)
         flash('Erro ao gerar o PDF. Por favor, tente novamente.', 'danger')
         return redirect(url_for('index'))
 

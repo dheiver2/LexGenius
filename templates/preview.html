@@ -9,442 +9,267 @@
 
 {% block extra_css %}
 <style>
-    /* Configurações para A4 */
-    @page {
-        size: A4;
-        margin: 2.5cm;
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap');
+    body {
+        background: #f8f9fa;
     }
-    
-    /* Container Principal */
-    .preview-container {
-        background: var(--light-bg);
-        min-height: 100vh;
-        padding: 2rem 0;
-    }
-    
-    .document-container {
+    .legal-document {
+        font-family: 'Times New Roman', Times, serif;
         background: white;
         width: 21cm;
         min-height: 29.7cm;
+        margin: 2rem auto;
         padding: 2.5cm;
-        margin: 0 auto;
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        position: relative;
-    }
-    
-    /* Barra de Ferramentas */
-    .document-toolbar {
-        position: sticky;
-        top: 0;
-        background: white;
-        padding: 1rem;
-        margin-bottom: 2rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        z-index: 1000;
-    }
-    
-    .toolbar-group {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-    }
-    
-    .toolbar-divider {
-        width: 1px;
-        height: 24px;
-        background: #E2E8F0;
-        margin: 0 1rem;
-    }
-    
-    /* Estilos do Documento Legal */
-    .legal-document {
-        font-family: 'Playfair Display', serif;
-        line-height: 1.5;
-        text-align: justify;
-        color: var(--dark-text);
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+        color: #222;
         font-size: 12pt;
-        position: relative;
     }
-    
-    /* Cabeçalho do Documento */
     .document-header {
         text-align: center;
-        margin-bottom: 3rem;
-        padding-bottom: 2rem;
-        border-bottom: 2px solid var(--accent-color);
-        position: relative;
+        margin-bottom: 2.5rem;
     }
-    
     .document-title {
         font-size: 16pt;
-        font-weight: 700;
-        color: var(--primary-color);
+        font-weight: bold;
         text-transform: uppercase;
         letter-spacing: 1px;
-        margin-bottom: 1rem;
-    }
-    
-    .document-date {
-        font-size: 12pt;
-        color: var(--secondary-color);
-        margin-top: 1rem;
-    }
-    
-    /* Conteúdo do Documento */
-    .document-content {
-        margin: 2rem 0;
-        position: relative;
-    }
-    
-    .section-title {
-        font-size: 14pt;
-        font-weight: 700;
-        margin-top: 2rem;
-        margin-bottom: 1rem;
-        color: var(--secondary-color);
-        border-bottom: 1px solid var(--accent-color);
-        padding-bottom: 0.5rem;
-        position: relative;
-    }
-    
-    .document-paragraph {
-        margin-bottom: 1rem;
-        text-indent: 2rem;
-        line-height: 1.5;
-        text-align: justify;
-        position: relative;
-    }
-    
-    /* Estilos para Incisos e Alíneas */
-    .legal-item {
-        margin: 1rem 0 0.5rem 2rem;
-        font-weight: 600;
-        color: var(--primary-color);
-        display: flex;
-        align-items: flex-start;
-    }
-    
-    .legal-item-number {
-        min-width: 2rem;
-        font-weight: 700;
-    }
-    
-    .legal-item-content {
-        flex: 1;
-    }
-    
-    .legal-subitem {
-        margin: 0.5rem 0 0.5rem 4rem;
-        font-weight: 500;
-        color: var(--secondary-color);
-        display: flex;
-        align-items: flex-start;
-    }
-    
-    .legal-subitem-letter {
-        min-width: 1.5rem;
-        font-weight: 600;
-    }
-    
-    .legal-subitem-content {
-        flex: 1;
-    }
-    
-    .legal-item + p,
-    .legal-subitem + p {
-        margin-left: 2rem;
-        text-indent: 0;
-    }
-    
-    .legal-subitem + p {
-        margin-left: 4rem;
-    }
-    
-    /* Elementos Especiais */
-    .highlight {
-        font-weight: 700;
-        color: var(--primary-color);
-        background: rgba(52, 152, 219, 0.1);
-        padding: 0 0.2rem;
-        border-radius: 2px;
-    }
-    
-    .citation {
-        font-style: italic;
-        color: var(--secondary-color);
-        border-left: 3px solid var(--accent-color);
-        padding-left: 1rem;
-        margin: 1rem 0;
-    }
-    
-    .legal-reference {
-        margin: 1rem 0;
-        padding: 1rem;
-        background-color: var(--light-bg);
-        border-left: 3px solid var(--accent-color);
-        font-size: 11pt;
-        color: var(--secondary-color);
-        border-radius: 0 0.5rem 0.5rem 0;
-    }
-    
-    .paragraph-number {
-        font-weight: 700;
-        color: var(--primary-color);
-    }
-    
-    .article-number {
-        font-weight: 700;
-        color: var(--secondary-color);
-    }
-    
-    .law-number {
-        font-weight: 700;
-        color: var(--primary-color);
-    }
-    
-    .code-reference {
-        font-weight: 600;
-        color: var(--secondary-color);
-        background: rgba(52, 152, 219, 0.1);
-        padding: 0 0.2rem;
-        border-radius: 2px;
-    }
-    
-    .court-reference {
-        font-weight: 600;
-        color: var(--primary-color);
-        background: rgba(52, 152, 219, 0.1);
-        padding: 0 0.2rem;
-        border-radius: 2px;
-    }
-    
-    /* Assinatura */
-    .document-signature {
-        margin-top: 4rem;
-        text-align: center;
-        position: relative;
-    }
-    
-    .signature-line {
-        width: 200px;
-        margin: 0 auto;
-        border-top: 1px solid var(--primary-color);
         margin-bottom: 0.5rem;
     }
-    
+    .document-court {
+        font-size: 12pt;
+        font-weight: 400;
+        margin-bottom: 1.5rem;
+    }
+    .document-parties {
+        margin-bottom: 2rem;
+    }
+    .section-title {
+        font-size: 14pt;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #bbb;
+        padding-bottom: 0.3rem;
+        letter-spacing: 0.5px;
+    }
+    .document-paragraph {
+        text-align: justify;
+        text-indent: 2em;
+        margin-bottom: 1rem;
+        line-height: 1.6;
+    }
+    .legal-citation {
+        font-style: italic;
+        color: #444;
+        border-left: 3px solid #aaa;
+        padding-left: 1rem;
+        margin: 1rem 0;
+        font-size: 11pt;
+    }
+    .document-requests {
+        margin-left: 2em;
+        margin-bottom: 1.5rem;
+    }
+    .document-requests li {
+        margin-bottom: 0.5rem;
+        text-align: justify;
+        text-indent: 0;
+    }
+    .document-signature {
+        margin-top: 3rem;
+        text-align: center;
+    }
+    .signature-line {
+        width: 200px;
+        margin: 0 auto 0.5rem auto;
+        border-top: 1px solid #222;
+    }
     .signature-name {
-        font-weight: 600;
+        font-weight: bold;
         margin-bottom: 0.25rem;
     }
-    
     .signature-oab {
         font-size: 11pt;
-        color: var(--secondary-color);
+        color: #555;
     }
-    
-    /* Rodapé */
     .document-footer {
         text-align: center;
-        margin-top: 4rem;
-        padding-top: 2rem;
-        border-top: 1px solid #E2E8F0;
-        position: relative;
-    }
-    
-    .footer-text {
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #eee;
         font-size: 10pt;
-        color: var(--secondary-color);
-        margin-bottom: 0.25rem;
+        color: #888;
     }
-    
-    .footer-date {
-        font-size: 10pt;
-        color: var(--secondary-color);
-    }
-    
-    /* Botões e Ações */
-    .btn-toolbar {
-        padding: 0.5rem 1rem;
-        border-radius: 0.5rem;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .btn-toolbar i {
-        font-size: 1.1rem;
-    }
-    
-    .btn-download {
-        background-color: var(--success-color);
-        color: white;
-    }
-    
-    .btn-download:hover {
-        background-color: #219a52;
-        transform: translateY(-1px);
-    }
-    
-    .btn-copy {
-        background-color: var(--secondary-color);
-        color: white;
-        border: none;
-    }
-    
-    .btn-copy:hover {
-        background-color: #2c3e50;
-        transform: translateY(-1px);
-    }
-    
-    .btn-copy.copied {
-        background-color: var(--success-color);
-    }
-    
-    .btn-print {
-        background-color: var(--primary-color);
-        color: white;
-    }
-    
-    .btn-print:hover {
-        background-color: #2c3e50;
-        transform: translateY(-1px);
-    }
-    
-    /* Toast Notification */
-    .toast {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background-color: var(--success-color);
-        color: white;
-        padding: 1rem 2rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        display: none;
-        z-index: 1000;
-    }
-    
-    .toast.show {
-        display: block;
-        animation: fadeInOut 2.5s ease-in-out;
-    }
-    
-    @keyframes fadeInOut {
-        0% { opacity: 0; transform: translateY(20px); }
-        10% { opacity: 1; transform: translateY(0); }
-        90% { opacity: 1; transform: translateY(0); }
-        100% { opacity: 0; transform: translateY(-20px); }
-    }
-    
-    /* Estilos para Impressão/PDF */
     @media print {
-        body {
-            background: white;
+        body { background: white; }
+        .legal-document { box-shadow: none; margin: 0; padding: 2.5cm; }
+        .document-toolbar { display: none; }
+    }
+    /* --- BOTÕES MODERNOS --- */
+    .btn-toolbar {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5em;
+        padding: 0.5em 1.2em;
+        border: none;
+        border-radius: 0.5em;
+        background: #2563eb;
+        color: #fff;
+        font-weight: 600;
+        font-size: 1rem;
+        box-shadow: 0 2px 8px rgba(37,99,235,0.08);
+        transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+        cursor: pointer;
+        margin-right: 0.5em;
+        margin-bottom: 0.5em;
+        outline: none;
+    }
+    .btn-toolbar:active {
+        transform: scale(0.97);
+    }
+    .btn-toolbar:hover, .btn-toolbar:focus {
+        background: #1d4ed8;
+        box-shadow: 0 4px 16px rgba(37,99,235,0.12);
+        color: #fff;
+        text-decoration: none;
+    }
+    .btn-toolbar.btn-download {
+        background: #059669;
+    }
+    .btn-toolbar.btn-download:hover, .btn-toolbar.btn-download:focus {
+        background: #047857;
+    }
+    .btn-toolbar.btn-copy, .btn-toolbar.btn-copy-html {
+        background: #64748b;
+    }
+    .btn-toolbar.btn-copy:hover, .btn-toolbar.btn-copy:focus,
+    .btn-toolbar.btn-copy-html:hover, .btn-toolbar.btn-copy-html:focus {
+        background: #334155;
+    }
+    .btn-toolbar.btn-share {
+        background: #f59e42;
+        color: #fff;
+    }
+    .btn-toolbar.btn-share:hover, .btn-toolbar.btn-share:focus {
+        background: #d97706;
+    }
+    .btn-toolbar.btn-refresh {
+        background: #a21caf;
+    }
+    .btn-toolbar.btn-refresh:hover, .btn-toolbar.btn-refresh:focus {
+        background: #701a75;
+    }
+    .btn-toolbar.btn-fullscreen {
+        background: #0ea5e9;
+    }
+    .btn-toolbar.btn-fullscreen:hover, .btn-toolbar.btn-fullscreen:focus {
+        background: #0369a1;
+    }
+    .btn-toolbar i {
+        font-size: 1.1em;
+    }
+    @media (max-width: 600px) {
+        .document-toolbar .toolbar-group {
+            flex-direction: column;
+            gap: 0.5em;
         }
-        
-        .preview-container {
-            padding: 0;
-        }
-        
-        .document-toolbar {
-            display: none;
-        }
-        
-        .document-container {
-            box-shadow: none;
-            padding: 0;
-            margin: 0;
+        .btn-toolbar {
             width: 100%;
-            min-height: auto;
+            justify-content: center;
         }
-        
-        .legal-document {
-            font-size: 12pt;
-        }
-        
-        .document-title {
-            font-size: 16pt;
-        }
-        
-        .section-title {
-            font-size: 14pt;
-        }
-        
-        .document-paragraph {
-            font-size: 12pt;
-            line-height: 1.5;
-        }
-        
-        .legal-item {
-            margin-left: 2rem;
-        }
-        
-        .legal-subitem {
-            margin-left: 4rem;
-        }
-        
-        .legal-item + p,
-        .legal-subitem + p {
-            margin-left: 2rem;
-        }
-        
-        .legal-subitem + p {
-            margin-left: 4rem;
-        }
-        
-        .signature-line {
-            width: 200px;
-        }
-        
-        .footer-text,
-        .footer-date {
-            font-size: 10pt;
-        }
+    }
+    /* --- FULLSCREEN SCROLL FIX --- */
+    :fullscreen, :-webkit-full-screen {
+        overflow: auto !important;
+    }
+    :fullscreen .legal-document,
+    :-webkit-full-screen .legal-document {
+        width: 100vw !important;
+        min-height: 100vh !important;
+        height: auto !important;
+        max-width: none !important;
+        max-height: none !important;
+        overflow: auto !important;
+        box-shadow: none !important;
+        padding: 2.5rem !important;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="preview-container">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <!-- Barra de Ferramentas -->
-                <div class="document-toolbar">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="toolbar-group">
-                            <button onclick="window.print()" class="btn-toolbar btn-print">
-                                <i class="fas fa-print"></i>
-                                Imprimir
-                            </button>
-                            <button onclick="copyDocument()" class="btn-toolbar btn-copy">
-                                <i class="fas fa-copy"></i>
-                                Copiar
-                            </button>
-                            {% if pdf_path %}
-                                <a href="{{ url_for('download_file', filename=pdf_path) }}" class="btn-toolbar btn-download" target="_blank">
-                                    <i class="fas fa-download"></i>
-                                    Baixar PDF
-                                </a>
-                            {% endif %}
-                        </div>
-                        <div class="toolbar-group">
-                            <a href="{{ url_for('index') }}" class="btn-toolbar" style="background-color: var(--light-bg); color: var(--dark-text);">
-                                <i class="fas fa-arrow-left"></i>
-                                Voltar
-                            </a>
-                        </div>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="document-toolbar">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="toolbar-group">
+                        <button onclick="window.print()" class="btn-toolbar btn-print">
+                            <i class="fas fa-print"></i> Imprimir
+                        </button>
+                        <button onclick="copyDocument()" class="btn-toolbar btn-copy">
+                            <i class="fas fa-copy"></i> Copiar Texto
+                        </button>
+                        <button onclick="copyHtml()" class="btn-toolbar btn-copy-html">
+                            <i class="fas fa-code"></i> Copiar HTML
+                        </button>
+                        {% if pdf_path %}
+                        <a href="{{ url_for('download_file', filename=pdf_path) }}" class="btn-toolbar btn-download" target="_blank">
+                            <i class="fas fa-download"></i> Baixar PDF
+                        </a>
+                        {% endif %}
+                        <button onclick="shareDocument()" class="btn-toolbar btn-share">
+                            <i class="fas fa-share-alt"></i> Compartilhar
+                        </button>
+                        <button onclick="regenerateDocument()" class="btn-toolbar btn-refresh">
+                            <i class="fas fa-sync"></i> Regerar
+                        </button>
+                        <button onclick="toggleFullScreen()" class="btn-toolbar btn-fullscreen">
+                            <i class="fas fa-expand"></i> Tela Cheia
+                        </button>
+                    </div>
+                    <div class="toolbar-group">
+                        <a href="{{ url_for('index') }}" class="btn-toolbar" style="background-color: var(--light-bg); color: var(--dark-text);">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </a>
                     </div>
                 </div>
-                
-                <!-- Documento -->
-                <div class="document-container">
-                    <div class="legal-document" id="documentContent">
-                        {{ document | safe }}
-                    </div>
+            </div>
+            <div class="legal-document" id="documentContent">
+                <div class="document-header">
+                    <h1 class="document-title">{{ case_type|default('PETIÇÃO INICIAL') }}</h1>
+                    <p class="document-court">{{ court_header|default('EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO DA ____ª VARA CÍVEL DA COMARCA DE SÃO PAULO – SP') }}</p>
+                </div>
+                <div class="document-parties">
+                    {{ parties|safe }}
+                </div>
+                <div class="document-section">
+                    <h2 class="section-title">DOS FATOS</h2>
+                    {{ facts|safe }}
+                </div>
+                <div class="document-section">
+                    <h2 class="section-title">DA FUNDAMENTAÇÃO JURÍDICA</h2>
+                    {{ legal_grounds|safe }}
+                </div>
+                <div class="document-section">
+                    <h2 class="section-title">DOS PEDIDOS</h2>
+                    <ol class="document-requests">
+                        {{ requests|safe }}
+                    </ol>
+                </div>
+                <div class="document-section">
+                    <p class="document-paragraph">{{ value_cause|safe }}</p>
+                    <p class="document-paragraph">Nestes termos, pede deferimento.</p>
+                    <p class="document-paragraph">{{ city_date|safe }}</p>
+                </div>
+                <div class="document-signature">
+                    <div class="signature-line"></div>
+                    <p class="signature-name">{{ lawyer_name|default('[Nome do Advogado]') }}</p>
+                    <p class="signature-oab">{{ lawyer_oab|default('OAB/UF XXXXX') }}</p>
+                </div>
+                <div class="document-footer">
+                    <p class="footer-text">Documento gerado por LexGenius</p>
+                    <p class="footer-date">Data de geração: {{ generation_date|default('') }}</p>
                 </div>
             </div>
         </div>
@@ -456,59 +281,67 @@
 <script>
 function copyDocument() {
     const documentContent = document.getElementById('documentContent').innerText;
-    navigator.clipboard.writeText(documentContent).then(() => {
-        const button = document.querySelector('.btn-copy');
-        const originalText = button.innerHTML;
-        
-        button.classList.add('copied');
-        button.innerHTML = '<i class="fas fa-check"></i> Copiado!';
-        
-        setTimeout(() => {
-            button.classList.remove('copied');
-            button.innerHTML = originalText;
-        }, 2000);
-    });
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(documentContent).then(() => {
+            feedbackButton('.btn-copy', 'Copiado!');
+        });
+    } else {
+        fallbackCopyTextToClipboard(documentContent);
+    }
 }
-
-// Adiciona numeração de parágrafos
-document.addEventListener('DOMContentLoaded', function() {
-    const paragraphs = document.querySelectorAll('.document-paragraph');
-    paragraphs.forEach((p, index) => {
-        if (!p.textContent.trim().startsWith('§')) {
-            p.textContent = `§ ${index + 1}. ${p.textContent}`;
-        }
-    });
-    
-    // Formata incisos e alíneas
-    formatLegalItems();
-});
-
-function formatLegalItems() {
-    // Formata incisos
-    const legalItems = document.querySelectorAll('.legal-item');
-    legalItems.forEach(item => {
-        const content = item.textContent;
-        const match = content.match(/^([IVX]+)\s*-\s*(.*)/);
-        if (match) {
-            item.innerHTML = `
-                <span class="legal-item-number">${match[1]} -</span>
-                <span class="legal-item-content">${match[2]}</span>
-            `;
-        }
-    });
-    
-    // Formata alíneas
-    const legalSubitems = document.querySelectorAll('.legal-subitem');
-    legalSubitems.forEach(subitem => {
-        const content = subitem.textContent;
-        const match = content.match(/^([a-j])\)\s*(.*)/);
-        if (match) {
-            subitem.innerHTML = `
-                <span class="legal-subitem-letter">${match[1]})</span>
-                <span class="legal-subitem-content">${match[2]}</span>
-            `;
-        }
-    });
+function copyHtml() {
+    const html = document.getElementById('documentContent').innerHTML;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(html).then(() => {
+            feedbackButton('.btn-copy-html', 'HTML Copiado!');
+        });
+    } else {
+        fallbackCopyTextToClipboard(html);
+    }
+}
+function feedbackButton(selector, msg) {
+    const button = document.querySelector(selector);
+    const originalText = button.innerHTML;
+    button.classList.add('copied');
+    button.innerHTML = `<i class="fas fa-check"></i> ${msg}`;
+    setTimeout(() => {
+        button.classList.remove('copied');
+        button.innerHTML = originalText;
+    }, 2000);
+}
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        document.execCommand('copy');
+    } catch (err) {}
+    document.body.removeChild(textArea);
+}
+function shareDocument() {
+    if (navigator.share) {
+        navigator.share({
+            title: document.title,
+            text: 'Confira este documento jurídico gerado pelo LexGenius!',
+            url: window.location.href
+        });
+    } else {
+        alert('Funcionalidade de compartilhamento em desenvolvimento!');
+    }
+}
+function regenerateDocument() {
+    // Ideal: fazer POST para /generate com os mesmos dados (precisa de backend)
+    location.reload();
+}
+function toggleFullScreen() {
+    const elem = document.getElementById('documentContent');
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } else if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    }
 }
 </script>
 {% endblock %} 
